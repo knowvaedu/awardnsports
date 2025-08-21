@@ -1,0 +1,259 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+    }
+</script>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আন্তর্জাতিক খেলাধুলা ও পুরস্কার কুইজ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a202c, #2d3748);
+            min-height: 100vh;
+            font-family: 'Noto Serif Bengali', serif;
+            color: #e2e8f0;
+        }
+        .quiz-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+        .question {
+            margin-bottom: 1.5rem;
+        }
+        .option {
+            display: block;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .option input {
+            margin-right: 0.5rem;
+        }
+        .result-container {
+            display: none;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 0.5rem;
+        }
+        .correct {
+            background: #10b981 !important;
+            color: white;
+        }
+        .incorrect {
+            background: #ef4444 !important;
+            color: white;
+        }
+        h1, h2 {
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1 class="text-3xl font-bold text-center mb-6">আন্তর্জাতিক বিষয়াবলি</h1>
+        <h2 class="text-xl text-center mb-4">টপিকস: ক্রিকেট, ফুটবল, বাস্কেটবল, দাবা, নোবেল, পুলিৎজার, ফিফা এবং অন্যান্য পুরস্কার</h2>
+        <div id="quiz">
+            <!-- Questions will be dynamically inserted here -->
+        </div>
+        <button onclick="submitQuiz()" class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">কুইজ জমা দিন</button>
+        <div id="result" class="result-container">
+            <h2 class="text-2xl font-bold">আপনার স্কোর: <span id="score"></span>/50</h2>
+            <div id="correct-answers"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { question: "ক্রিকেটে সর্বাধিক ওয়ানডে সেঞ্চুরির রেকর্ড কার নামে?", options: ["সচিন তেন্ডুলকার", "বিরাট কোহলি", "রিকি পন্টিং", "রোহিত শর্মা"], correct: 1 },
+            { question: "ফিফা ওয়ার্ল্ড কাপ ২০২২-এর বিজয়ী কোন দেশ?", options: ["আর্জেন্টিনা", "ফ্রান্স", "ব্রাজিল", "জার্মানি"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ-এর সর্বাধিক চ্যাম্পিয়নশিপ জিতেছে কোন টিম?", options: ["বোস্টন সেলটিক্স", "লস অ্যাঞ্জেলেস লেকার্স", "শিকাগো বুলস", "গোল্ডেন স্টেট ওয়ারিয়র্স"], correct: 0 },
+            { question: "দাবার বিশ্ব চ্যাম্পিয়নশিপ ২০২৩-এ বিজয়ী কে?", options: ["দিং লিরেন", "ম্যাগনাস কার্লসেন", "ইয়ান নেপোমনিয়াচ্চি", "বিশ্বনাথন আনন্দ"], correct: 0 },
+            { question: "নোবেল শান্তি পুরস্কার ২০২৪ সালে কে পেয়েছেন?", options: ["নিহন হিদানকিয়ো", "ইলন মাস্ক", "গ্রেটা থুনবার্গ", "কেউ নয়"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজ কোন ক্ষেত্রে দেওয়া হয়?", options: ["সাংবাদিকতা, সাহিত্য, সঙ্গীত", "খেলাধুলা", "বিজ্ঞান", "চলচ্চিত্র"], correct: 0 },
+            { question: "ফিফা পুসকাস অ্যাওয়ার্ড ২০২৪-এ কে জিতেছে?", options: ["আলেহান্দ্রো গার্নাচো", "লিওনেল মেসি", "ক্রিস্টিয়ানো রোনালদো", "কিলিয়ান এমবাপ্পে"], correct: 0 },
+            { question: "ক্রিকেটে আইসিসি মেন’স টি২০ বিশ্বকাপ ২০২৪-এর বিজয়ী কোন দল?", options: ["ভারত", "দক্ষিণ আফ্রিকা", "ইংল্যান্ড", "অস্ট্রেলিয়া"], correct: 0 },
+            { question: "ফুটবলে ব্যালন ডি'ওর ২০২৪-এর বিজয়ী কে?", options: ["লিওনেল মেসি", "এরলিং হালান্ড", "কিলিয়ান এমবাপ্পে", "ভিনিসিয়াস জুনিয়র"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ ফাইনালস এমভিপি ২০২৪ কে?", options: ["জেলেন ব্রাউন", "নিকোলা জোকিচ", "লেব্রন জেমস", "স্টিফেন কারি"], correct: 0 },
+            { question: "দাবার সর্বকনিষ্ঠ গ্র্যান্ডমাস্টার কে?", options: ["অভিমন্যু মিশ্র", "গুকেশ ডি", "প্রগ্নানন্দা আর", "ম্যাগনাস কার্লসেন"], correct: 0 },
+            { question: "নোবেল সাহিত্য পুরস্কার ২০২৪-এ কে জিতেছেন?", options: ["হান কাং", "জন ফস", "আব্দুলরাজাক গুর্নাহ", "লুইস গ্লুক"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজ ফর ফিকশন ২০২৪-এ কোন বই জিতেছে?", options: ["নাইট ওয়াচ", "দ্য ডেমন অফ আনরেস্ট", "ইন দ্য হার্ট অফ দ্য সি", "কোনোটিই নয়"], correct: 0 },
+            { question: "ফিফা বেস্ট মেন’স প্লেয়ার ২০২৪-এ কে জিতেছে?", options: ["ভিনিসিয়াস জুনিয়র", "লিওনেল মেসি", "ক্রিস্টিয়ানো রোনালদো", "জুড বেলিংহ্যাম"], correct: 0 },
+            { question: "ক্রিকেটে আইসিসি প্লেয়ার অফ দ্য ইয়ার ২০২৩ কে?", options: ["বিরাট কোহলি", "জো রুট", "প্যাট কামিন্স", "রোহিত শর্মা"], correct: 0 },
+            { question: "ফুটবলে গোল্ডেন বুট ২০২২ ফিফা ওয়ার্ল্ড কাপে কে জিতেছে?", options: ["কিলিয়ান এমবাপ্পে", "লিওনেল মেসি", "ক্রিস্টিয়ানো রোনালদো", "হ্যারি কেন"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ-এর সর্বাধিক স্কোরার কে?", options: ["লেব্রন জেমস", "মাইকেল জর্ডান", "কারিম আব্দুল-জব্বার", "কোবে ব্রায়ান্ট"], correct: 0 },
+            { question: "দাবার ফিদে র‍্যাঙ্কিংয়ে ২০২৪-এ শীর্ষ খেলোয়াড় কে?", options: ["ম্যাগনাস কার্লসেন", "দিং লিরেন", "ইয়ান নেপোমনিয়াচ্চি", "ফাবিয়ানো কারুয়ানা"], correct: 0 },
+            { question: "নোবেল পুরস্কার কোন শহরে প্রদান করা হয়?", options: ["স্টকহোম ও ওসলো", "প্যারিস", "লন্ডন", "নিউ ইয়র্ক"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজ কোন বিশ্ববিদ্যালয় পরিচালনা করে?", options: ["কলাম্বিয়া বিশ্ববিদ্যালয়", "হার্ভার্ড বিশ্ববিদ্যালয়", "ইয়েল বিশ্ববিদ্যালয়", "প্রিন্সটন বিশ্ববিদ্যালয়"], correct: 0 },
+            { question: "ফিফা বেস্ট উইমেন’স প্লেয়ার ২০২৩ কে?", options: ["আইতানা বোনমাতি", "অ্যালেক্স মর্গান", "মেগান রাপিনো", "জেনিফার হার্মোসো"], correct: 0 },
+            { question: "ক্রিকেটে ওয়ানডে বিশ্বকাপ ২০২৩-এর বিজয়ী কোন দল?", options: ["অস্ট্রেলিয়া", "ভারত", "দক্ষিণ আফ্রিকা", "ইংল্যান্ড"], correct: 0 },
+            { question: "ফুটবলে ব্যালন ডি'ওর ফেমে ২০২৪-এর বিজয়ী কে?", options: ["আইতানা বোনমাতি", "অ্যালেক্সিয়া পুতেলাস", "আদা হেগারবার্গ", "সাম কার"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ-এর প্রথম চ্যাম্পিয়নশিপ জিতেছে কোন টিম?", options: ["মিনিয়াপোলিস লেকার্স", "বোস্টন সেলটিক্স", "ফিলাডেলফিয়া ওয়ারিয়র্স", "শিকাগো বুলস"], correct: 0 },
+            { question: "দাবার সর্বপ্রথম বিশ্ব চ্যাম্পিয়ন কে?", options: ["উইলহেল্ম স্টেইনিৎজ", "ইমানুয়েল লাস্কার", "হোসে রাউল কাপাব্লাঙ্কা", "আলেকজান্ডার আলেখিন"], correct: 0 },
+            { question: "নোবেল পুরস্কারের প্রতিষ্ঠাতা কে?", options: ["আলফ্রেড নোবেল", "জোসেফ পুলিৎজার", "মারি ক্যুরি", "থমাস এডিসন"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজ ফর স্পোর্টস রিপোর্টিং কবে প্রথম দেওয়া হয়?", options: ["১৯৭৪", "১৯৮৪", "১৯৬৪", "১৯৫৪"], correct: 0 },
+            { question: "ফিফা ওয়ার্ল্ড কাপের প্রথম বিজয়ী কোন দেশ?", options: ["উরুগুয়ে", "ব্রাজিল", "আর্জেন্টিনা", "ইতালি"], correct: 0 },
+            { question: "ক্রিকেটে টেস্ট ম্যাচের প্রথম সেঞ্চুরি কে করেন?", options: ["চার্লস ব্যানারম্যান", "ডব্লিউ জি গ্রেস", "জ্যাক হবস", "ডন ব্র্যাডম্যান"], correct: 0 },
+            { question: "ফুটবলে গোল্ডেন বল ২০২২ ফিফা ওয়ার্ল্ড কাপে কে জিতেছে?", options: ["লিওনেল মেসি", "কিলিয়ান এমবাপ্পে", "ক্রিস্টিয়ানো রোনালদো", "নেইমার"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ-এর সর্বাধিক এমভিপি জিতেছে কে?", options: ["কারিম আব্দুল-জব্বার", "মাইকেল জর্ডান", "লেব্রন জেমস", "বিল রাসেল"], correct: 0 },
+            { question: "দাবার ফিদে র‍্যাঙ্কিংয়ে প্রথম ভারতীয় গ্র্যান্ডমাস্টার কে?", options: ["বিশ্বনাথন আনন্দ", "পেন্টালা হরিকৃষ্ণ", "গুকেশ ডি", "প্রগ্নানন্দা আর"], correct: 0 },
+            { question: "নোবেল শান্তি পুরস্কার কোন খেলাধুলা সংগঠন পেয়েছে?", options: ["আন্তর্জাতিক অলিম্পিক কমিটি", "ফিফা", "আইসিসি", "কোনোটিই নয়"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজ ফর ব্রেকিং নিউজ কোন স্পোর্টস ইভেন্টে দেওয়া হয়েছে?", options: ["বোস্টন ম্যারাথন বোম্বিং", "ফুটবল স্ক্যান্ডাল", "অলিম্পিক ডোপিং", "কোনোটিই নয়"], correct: 0 },
+            { question: "ফিফা পুসকাস অ্যাওয়ার্ডের নামকরণ কার নামে?", options: ["ফেরেন্স পুসকাস", "পেলে", "দিয়েগো মারাদোনা", "জিনেদিন জিদান"], correct: 0 },
+            { question: "ক্রিকেটে আইসিসি টেস্ট চ্যাম্পিয়নশিপ ২০২৩-এর বিজয়ী কোন দল?", options: ["অস্ট্রেলিয়া", "ভারত", "ইংল্যান্ড", "নিউজিল্যান্ড"], correct: 0 },
+            { question: "ফুটবলে ইউইএফএ চ্যাম্পিয়ন্স লিগ ২০২৩-২৪-এর বিজয়ী কোন ক্লাব?", options: ["রিয়াল মাদ্রিদ", "ম্যানচেস্টার সিটি", "বায়ার্ন মিউনিখ", "পিএসজি"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ-এর প্রথম খেলোয়াড় কে যিনি ৪০,০০০ পয়েন্ট অতিক্রম করেছেন?", options: ["লেব্রন জেমস", "মাইকেল জর্ডান", "কোবে ব্রায়ান্ট", "কারিম আব্দুল-জব্বার"], correct: 0 },
+            { question: "দাবার সিনকুইফিল্ড কাপ ২০২৪-এর বিজয়ী কে?", options: ["আলিরেজা ফিরোজা", "ম্যাগনাস কার্লসেন", "দিং লিরেন", "ফাবিয়ানো কারুয়ানা"], correct: 0 },
+            { question: "নোবেল পুরস্কার কতটি ক্যাটাগরিতে দেওয়া হয়?", options: ["৬টি", "৫টি", "৭টি", "৪টি"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজের প্রতিষ্ঠাতা কে?", options: ["জোসেফ পুলিৎজার", "আলফ্রেড নোবেল", "হেনরি পুলিৎজার", "থমাস পুলিৎজার"], correct: 0 },
+            { question: "ফিফা ওয়ার্ল্ড কাপ ২০১৮-এর বিজয়ী কোন দেশ?", options: ["ফ্রান্স", "ক্রোয়েশিয়া", "ব্রাজিল", "জার্মানি"], correct: 0 },
+            { question: "ক্রিকেটে সর্বাধিক টেস্ট রানের রেকর্ড কার নামে?", options: ["সচিন তেন্ডুলকার", "রিকি পন্টিং", "জ্যাক ক্যালিস", "জো রুট"], correct: 0 },
+            { question: "ফুটবলে সর্বাধিক গোল করেছেন কোন খেলোয়াড়?", options: ["ক্রিস্টিয়ানো রোনালদো", "লিওনেল মেসি", "পেলে", "ফেরেন্স পুসকাস"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ-এর সর্বাধিক অ্যাসিস্ট রেকর্ড কার?", options: ["জন স্টকটন", "ম্যাজিক জনসন", "স্টিভ ন্যাশ", "জেসন কিড"], correct: 0 },
+            { question: "দাবার সর্বকনিষ্ঠ বিশ্ব চ্যাম্পিয়ন কে?", options: ["ম্যাগনাস কার্লসেন", "গ্যারি কাসপারভ", "বিশ্বনাথন আনন্দ", "দিং লিরেন"], correct: 0 },
+            { question: "নোবেল অর্থনীতি পুরস্কার কোন সংস্থা প্রদান করে?", options: ["সুইডেনের সেন্ট্রাল ব্যাঙ্ক", "নরওয়ের সেন্ট্রাল ব্যাঙ্ক", "ইউরোপিয়ান সেন্ট্রাল ব্যাঙ্ক", "ফেডারেল রিজার্ভ"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজ কোন শহরে প্রদান করা হয়?", options: ["নিউ ইয়র্ক", "ওয়াশিংটন ডিসি", "শিকাগো", "লস অ্যাঞ্জেলেস"], correct: 0 },
+            { question: "ফিফা বেস্ট কোচ অ্যাওয়ার্ড ২০২৪-এ কে জিতেছে?", options: ["কার্লো আনচেলত্তি", "পেপ গার্দিওলা", "জিনেদিন জিদান", "ইয়ুর্গেন ক্লপ"], correct: 0 },
+            { question: "ক্রিকেটে আইসিসি মেন’স টি২০ প্লেয়ার অফ দ্য টুর্নামেন্ট ২০২৪ কে?", options: ["জসপ্রিত বুমরাহ", "বিরাট কোহলি", "রোহিত শর্মা", "হার্দিক পান্ডিয়া"], correct: 0 },
+            { question: "ফুটবলে ইউইএফএ ইউরো ২০২৪-এর বিজয়ী কোন দেশ?", options: ["স্পেন", "ইংল্যান্ড", "ফ্রান্স", "জার্মানি"], correct: 0 },
+            { question: "বাস্কেটবলে এনবিএ-এর সর্বাধিক রিবাউন্ড রেকর্ড কার?", options: ["উইল্ট চেম্বারলেইন", "বিল রাসেল", "কারিম আব্দুল-জব্বার", "ডেনিস রডম্যান"], correct: 0 },
+            { question: "দাবার ভারতীয় খেলোয়াড় গুকেশ ডি কোন বয়সে গ্র্যান্ডমাস্টার হন?", options: ["১২", "১৩", "১৪", "১৫"], correct: 0 },
+            { question: "নোবেল পুরস্কারের প্রথম বিজয়ী কে?", options: ["হেনরি ডুনান্ট", "মারি ক্যুরি", "আলফ্রেড নোবেল", "আলবার্ট আইনস্টাইন"], correct: 0 },
+            { question: "পুলিৎজার প্রাইজ কতটি ক্যাটাগরিতে দেওয়া হয়?", options: ["২৩টি", "২১টি", "২৫টি", "২০টি"], correct: 0 }
+        ];
+
+        function loadQuiz() {
+            const quizDiv = document.getElementById('quiz');
+            questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <h3 class="text-lg font-semibold mb-2">${index + 1}. ${q.question}</h3>
+                    ${q.options.map((option, i) => `
+                        <label class="option">
+                            <input type="radio" name="q${index}" value="${i}">
+                            ${option}
+                        </label>
+                    `).join('')}
+                `;
+                quizDiv.appendChild(questionDiv);
+            });
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            const resultDiv = document.getElementById('result');
+            const correctAnswersDiv = document.getElementById('correct-answers');
+            correctAnswersDiv.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                const questionDiv = document.getElementsByClassName('question')[index];
+                const options = questionDiv.getElementsByClassName('option');
+
+                if (selected && parseInt(selected.value) === q.correct) {
+                    score++;
+                    options[q.correct].classList.add('correct');
+                } else {
+                    if (selected) {
+                        options[parseInt(selected.value)].classList.add('incorrect');
+                    }
+                    options[q.correct].classList.add('correct');
+                }
+
+                const answerDiv = document.createElement('div');
+                answerDiv.innerHTML = `<p><strong>${index + 1}. ${q.question}</strong><br>সঠিক উত্তর: ${q.options[q.correct]}</p>`;
+                correctAnswersDiv.appendChild(answerDiv);
+            });
+
+            document.getElementById('score').textContent = score;
+            resultDiv.style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        loadQuiz();
+    </script>
+</body>
+</html>
